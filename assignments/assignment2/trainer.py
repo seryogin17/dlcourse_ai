@@ -1,5 +1,4 @@
 from copy import deepcopy
-
 import numpy as np
 from metrics import multiclass_accuracy
 
@@ -24,7 +23,7 @@ class Trainer:
     """
 
     def __init__(self, model, dataset, optim,
-                 num_epochs=20,
+                 num_epochs=10,
                  batch_size=20,
                  learning_rate=1e-2,
                  learning_rate_decay=1.0):
@@ -55,7 +54,7 @@ class Trainer:
         params = self.model.params()
         self.optimizers = {}
         for param_name, param in params.items():
-            self.optimizers[param_name] = deepcopy(self.optim)
+            self.optimizers[param_name] = deepcopy(self.optim) # deepcopy is needed to save all unique parameters, occuring every call of momentumSGD
 
     def compute_accuracy(self, X, y):
         """
@@ -63,14 +62,17 @@ class Trainer:
         """
         indices = np.arange(X.shape[0])
         sections = np.arange(self.batch_size, X.shape[0], self.batch_size)
-        batches_indices = np.array_split(indices, sections)
+        batches_indices = np.array_split(indices, sections) # arrays of indices for every batch
 
         pred = np.zeros_like(y)
-
+        pred = self.model.predict(X)
+        
+        '''
         for batch_indices in batches_indices:
             batch_X = X[batch_indices]
             pred_batch = self.model.predict(batch_X)
             pred[batch_indices] = pred_batch
+        '''
 
         return multiclass_accuracy(pred, y)
 
@@ -99,8 +101,9 @@ class Trainer:
                 # TODO Generate batches based on batch_indices and
                 # use model to generate loss and gradients for all
                 # the params
+                
+                loss = self.model.compute_loss_and_gradients(self.dataset.train_X[batch_indices], self.dataset.train_y[batch_indices])
 
-                raise Exception("Not implemented!")
 
                 for param_name, param in self.model.params().items():
                     optimizer = self.optimizers[param_name]
@@ -108,9 +111,8 @@ class Trainer:
 
                 batch_losses.append(loss)
 
-            if np.not_equal(self.learning_rate_decay, 1.0):
-                # TODO: Implement learning rate decay
-                raise Exception("Not implemented!")
+
+            self.learning_rate *= self.learning_rate_decay
 
             ave_loss = np.mean(batch_losses)
 
@@ -121,7 +123,7 @@ class Trainer:
                                                  self.dataset.val_y)
 
             print("Loss: %f, Train accuracy: %f, val accuracy: %f" %
-                  (batch_losses[-1], train_accuracy, val_accuracy))
+                  (ave_loss, train_accuracy, val_accuracy))
 
             loss_history.append(ave_loss)
             train_acc_history.append(train_accuracy)

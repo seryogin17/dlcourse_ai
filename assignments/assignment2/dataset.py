@@ -4,6 +4,7 @@ import numpy as np
 import scipy.io as io
 
 
+
 def load_data_mat(filename, max_samples, seed=42):
     raw = io.loadmat(filename)
     X = raw['X']  # Array of [32, 32, 3, n_samples]

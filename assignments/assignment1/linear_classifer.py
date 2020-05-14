@@ -94,7 +94,7 @@ def linear_softmax(X, W, target_index):
     
     predictions = np.dot(X, W)
     loss, grad_dZ = softmax_with_cross_entropy(predictions, target_index)
-    grad_dW = np.dot(X.T,grad_dZ) / X.shape[0] # / norming is needed to find the mean of grad for all samples in batch
+    grad_dW = np.dot(X.T,grad_dZ) / X.shape[0] # norming is needed to find the mean of grad for all samples in batch
 
     return loss.mean(), grad_dW
 
